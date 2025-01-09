@@ -1,0 +1,58 @@
+.home-header {
+  background: rgb(105, 41, 120);
+  background: linear-gradient(
+    92deg,
+    rgba(105, 41, 120, 1) 0%,
+    rgba(0, 0, 1, 1) 100%
+  );
+  color: white;
+  padding: 50px 0;
+  font-family: 'Poppins', sans-serif; /* Apply Poppins to the entire section */
+}
+
+.home-header .header-section {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.home-header .header-left {
+  max-width: 600px;
+}
+
+.home-header h1 {
+  font-size: 3rem;
+  margin-bottom: 20px;
+  font-family: 'Poppins', sans-serif; /* Ensure consistency for headings */
+  font-size: 4rem;
+}
+
+.home-header p {
+  font-size: 2rem;
+  line-height: 3rem;
+  margin-bottom: 50px;
+  font-family: 'Poppins', sans-serif; /* Ensure consistency for paragraphs */
+  font-size: 2rem;
+}
+
+
+.home-header .primary-button {
+  background-color: #ff00ea;
+  border-radius: 6px;
+  font-weight: 700;
+  color: #ffffff;
+  padding: 12px 24px;
+  font-family: 'Poppins', sans-serif; /* Button font */
+  transition: 0.2s ease-out;
+  font-size: 25px;
+}
+
+.home-header .primary-button:hover {
+  background-color: white;
+  color: #ff00ea;
+}
+
+.home-header .header-right img {
+  height: 300px;
+  width: auto;
+}
