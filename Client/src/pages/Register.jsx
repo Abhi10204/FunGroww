@@ -41,7 +41,7 @@ export const Register = () => {
       });
 
       if (response.ok) {
-        alert("Login Sucessfull")
+        // alert("Login Sucessfull")
         const res_data = await response.json();
         storeTokenInLs(res_data.token);
 
@@ -53,7 +53,7 @@ export const Register = () => {
         });
 
         navigate("/home");
-        toast.error("registration successful")
+        toast.success("registration successful")
       } else {
         toast.error("Invalid Credintials")
         console.error("Invalid credentials");

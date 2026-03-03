@@ -46,7 +46,7 @@ export const Login = () =>{
               
             });
             navigate ("/home");
-            toast.error("Login Sucessful"); 
+            toast.success("Login Sucessful"); 
           }else{
             toast.error("Invalid credentials");
             console.log("Invalid Credential");

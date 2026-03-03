@@ -31,17 +31,24 @@ export const Navbar = ()=>{
                             <li>   
                                 <NavLink to="/service">Service</NavLink>
                             </li>
-                            <li>
-                                <NavLink to="/register" className="secondary-button">Post a Job</NavLink>
-                            </li>
+                            
                             {isLoggedIn ?(
+                                <>
+                                 <li>
+                                <NavLink to="/register" className="secondary-button">Post a job</NavLink>
+                            </li>
                                 <li>
                                 <NavLink to="/logout">Logout</NavLink>
                             </li>
+                            </>
                             ):(
                                 <>
+                                <li>
+                                <NavLink to="/register" className="secondary-button">Register</NavLink>
+                            </li>
                             <li>
                                 <NavLink to="/login" >Login</NavLink>
+                                
                             </li>
                                 </>
                             )}
