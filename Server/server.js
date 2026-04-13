@@ -11,7 +11,7 @@ const jobRouter = require("./router/job-router");
 const corsOptions ={
     origin:[
   "http://localhost:5173",
-  "https://fun-groww.vercel.app"
+   "https://fun-groww-6jvfy65tt-abhijeet-singh-bais-projects.vercel.app"
 ],
     methods: "GET,POST,PUT, DELETE, PATCH, HEAD",
     credentials: true,
