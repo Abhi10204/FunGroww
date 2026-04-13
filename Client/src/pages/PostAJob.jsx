@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "./JobPost.css";
+import { toast } from "react-toastify";
 
 export const PostAJob = () => {
   const [jobData, setJobData] = useState({
@@ -9,103 +10,135 @@ export const PostAJob = () => {
     budget: "",
     deadline: "",
     contact: "",
-    applyLink: "", // Add applyLink field
+    applyLink: "",
   });
-  const [errorMessage, setErrorMessage] = useState(""); // To display error messages
-  const [successMessage, setSuccessMessage] = useState(""); // To display success message
+
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
+  // ✅ Handle input
   const handleInput = (e) => {
     const { name, value } = e.target;
-    setJobData({
-      ...jobData,
+    setJobData((prev) => ({
+      ...prev,
       [name]: value,
-    });
+    }));
   };
 
+  // ✅ URL validation
   const validateUrl = (url) => {
-    const regex = /^(https?|chrome):\/\/[^\s$.?#].[^\s]*$/gm; // Simple URL validation
+    const regex = /^(https?:\/\/)[^\s$.?#].[^\s]*$/;
     return regex.test(url);
   };
 
+  // ✅ Email / Phone validation
+  const validateContact = (value) => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    const phoneRegex = /^[6-9]\d{9}$/;
+    return emailRegex.test(value) || phoneRegex.test(value);
+  };
+
+  // ✅ Submit handler
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // Validate applyLink URL
-    if (jobData.applyLink && !validateUrl(jobData.applyLink)) {
-      setErrorMessage("Please enter a valid URL for the Apply Link.");
+    if (loading) return;
+
+    // 🔴 Required validation
+    if (
+      !jobData.title.trim() ||
+      !jobData.description.trim() ||
+      !jobData.budget.trim() ||
+      !jobData.deadline ||
+      !jobData.contact.trim()
+    ) {
+      toast.error("All fields are required");
       return;
     }
 
-    // Check if all fields are filled
-    if (
-      jobData.title &&
-      jobData.description &&
-      jobData.budget &&
-      jobData.deadline &&
-      jobData.contact &&
-      jobData.applyLink // Ensure applyLink is provided
-    ) {
+    // 🔴 Contact validation
+    if (!validateContact(jobData.contact)) {
+      toast.error("Enter valid email or phone number");
+      return;
+    }
+
+    // 🔴 URL validation (optional)
+    if (jobData.applyLink && !validateUrl(jobData.applyLink)) {
+      toast.error("Enter valid Apply Link (must start with http/https)");
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      const response = await fetch("http://localhost:5000/api/jobs", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(jobData),
+      });
+
+      let resData;
+
+      // ✅ Safe JSON parsing
       try {
-        const response = await fetch("http://localhost:5000/api/jobs", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${localStorage.getItem("authToken")}`,
-          },
-          body: JSON.stringify(jobData),
+        resData = await response.json();
+      } catch {
+        resData = {};
+      }
+
+      console.log("Status:", response.status);
+      console.log("Response:", resData);
+
+      if (response.ok) {
+        toast.success(resData.message || "Job posted successfully ✅");
+
+        // ✅ Reset form
+        setJobData({
+          title: "",
+          description: "",
+          budget: "",
+          deadline: "",
+          contact: "",
+          applyLink: "",
         });
 
-        if (response.ok) {
-          const resData = await response.json();
-          console.log("Job posted successfully", resData);
+        // ✅ Redirect after slight delay
+        setTimeout(() => {
+          navigate("/Home");
+        }, 1000);
 
-          // Show success message
-          setSuccessMessage("Job posted successfully!");
-
-          // Reset form after successful submission
-          setJobData({
-            title: "",
-            description: "",
-            budget: "",
-            deadline: "",
-            contact: "",
-            applyLink: "", // Reset applyLink as well
-          });
-
-          // Navigate to the HomeLogin page where the job listings are displayed
-          setTimeout(() => {
-            navigate("/Home");
-          }, 2000); // Delay navigation to show the success message
-        } else {
-          console.error("Failed to post job");
-          setErrorMessage("Failed to post job. Please try again.");
-        }
-      } catch (error) {
-        console.error("Error posting job", error);
-        setErrorMessage("Error posting job. Please try again later.");
+      } else {
+        toast.error(resData.message || "Something went wrong ❌");
       }
-    } else {
-      setErrorMessage("Please fill in all fields.");
+
+    } catch (error) {
+      console.error("Fetch Error:", error);
+      toast.error("Server not responding ❌");
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
     <div className="job-post-container">
-      {/* Left side - Image */}
+      
+      {/* Image */}
       <div className="job-post-image">
-        <img src="./images/PostaJob.png" alt="Job posting" width="100%" height="auto" />
+        <img
+          src="./images/PostaJob.png"
+          alt="Job posting"
+          width="100%"
+        />
       </div>
 
-      {/* Right side - Form */}
+      {/* Form */}
       <div className="job-post-form">
         <h1>Post a Job</h1>
-        
-        {/* Display Error or Success Messages */}
-        {errorMessage && <p className="error-message">{errorMessage}</p>}
-        {successMessage && <p className="success-message">{successMessage}</p>}
-        
+
         <form onSubmit={handleSubmit}>
+          
           <input
             type="text"
             name="title"
@@ -114,6 +147,7 @@ export const PostAJob = () => {
             onChange={handleInput}
             className="job-post-input"
           />
+
           <textarea
             name="description"
             placeholder="Job Description"
@@ -121,41 +155,50 @@ export const PostAJob = () => {
             onChange={handleInput}
             className="job-post-textarea"
           />
+
           <input
             type="text"
             name="budget"
-            placeholder="Budget"
+            placeholder="Budget (e.g. ₹5000)"
             value={jobData.budget}
             onChange={handleInput}
             className="job-post-input"
           />
+
           <input
             type="date"
             name="deadline"
-            placeholder="Deadline"
             value={jobData.deadline}
             onChange={handleInput}
             className="job-post-input"
           />
+
           <input
             type="text"
             name="contact"
-            placeholder="Contact"
+            placeholder="Email or Phone"
             value={jobData.contact}
             onChange={handleInput}
             className="job-post-input"
           />
+
           <input
             type="text"
             name="applyLink"
-            placeholder="Apply Link"
+            placeholder="Apply Link (optional)"
             value={jobData.applyLink}
             onChange={handleInput}
             className="job-post-input"
           />
-          <button type="submit" className="job-post-button">
-            Post Job
+
+          <button
+            type="submit"
+            className="job-post-button"
+            disabled={loading}
+          >
+            {loading ? "Posting..." : "Post Job"}
           </button>
+
         </form>
       </div>
     </div>

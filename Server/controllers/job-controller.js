@@ -7,7 +7,7 @@ exports.createJob = async (req, res) => {
 
   // Validate the applyLink to ensure it's a valid URL
   if (applyLink && !isURL(applyLink)) {
-    return res.status(400).json({ error: "Invalid URL format for Apply Link" });
+    res.status(400).json({ message: "Invalid URL format for Apply Link" });
   }
 
   try {
@@ -23,7 +23,7 @@ exports.createJob = async (req, res) => {
     res.status(201).json(newJob); // Job created successfully
   } catch (error) {
     console.error("Error creating job:", error);
-    res.status(500).send("Server Error");
+    res.status(500).json("Server Error");
   }
 };
 
@@ -34,6 +34,6 @@ exports.getAllJobs = async (req, res) => {
     res.status(200).json(jobs); // Return all jobs
   } catch (error) {
     console.error("Error fetching jobs:", error);
-    res.status(500).send("Server Error");
+    res.status(500).json("Server Error");
   }
 };

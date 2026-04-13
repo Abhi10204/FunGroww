@@ -1,114 +1,130 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../store/auth";
-import {toast} from "react-toastify";
+import { toast } from "react-toastify";
 
+export const Login = () => {
+  const [user, setUser] = useState({
+    email: "",
+    password: "",
+  });
 
-export const Login = () =>{
-    const [user, setUser] = useState({
-        email: "",
-        password: ""
-    })
+  const navigate = useNavigate();
+  const { storeTokenInLs } = useAuth();
 
-    const navigate  = useNavigate();
-    const {storeTokenInLs} = useAuth();
-    
-    const handleInput = (e)=>{
-        let name = e.target.name;
-        let value = e.target.value;
+  const handleInput = (e) => {
+    const { name, value } = e.target;
 
+    setUser({
+      ...user,
+      [name]: value,
+    });
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    try {
+      const response = await fetch(
+        `${import.meta.env.VITE_API_URL}/api/auth/login`,
+        {
+          method: "POST", // ✅ fixed
+          headers: {
+            "Content-Type": "application/json", // ✅ fixed
+          },
+          body: JSON.stringify(user),
+        }
+      );
+
+      const res_data = await response.json(); // ✅ always parse response
+
+      console.log("Login response:", res_data);
+
+      if (response.ok) {
+        // ✅ store token
+        storeTokenInLs(res_data.token);
+
+        // ✅ reset form
         setUser({
-            ...user,
-            [name] : value,
+          email: "",
+          password: "",
         });
-    };
 
-    const handleSubmit = async(e)=>{
-        e.preventDefault();
-        try {
-          const response = await fetch(`${import.meta.env.VITE_API_URL}/api/auth/login`, {
-            method: "Post",
-            headers:{
-              "Content-Type": "Application/json",
-            },
-            body: JSON.stringify(user),
-          });
+        // ✅ success toast (dynamic)
+        toast.success(res_data.message || "Login Successful");
 
-          console.log("Login form",response)
+        // ✅ redirect
+        navigate("/home");
 
-          if (response.ok) {
-            const res_data = await response.json();
-            storeTokenInLs(res_data.token);
+      } else {
+        // ❌ dynamic error from backend
+        toast.error(res_data.message || "Invalid credentials");
+      }
 
-            setUser({
-              "email": "",
-              "password": "",
-              
-            });
-            navigate ("/home");
-            toast.success("Login Sucessful"); 
-          }else{
-            toast.error("Invalid credentials");
-            console.log("Invalid Credential");
-          }
+    } catch (error) {
+      console.log("Login error:", error);
 
-        } catch (error) {
-          console.log("login",error);
-        };
-    };
-    
-    return(
-    <>
-        
-      <section>
-        <main>
-          <div className="section-login">
-            <div className="container-login">
-              <div className="login-image ">
-                <img
-                  src="/images/Login.png"
-                  alt="login png"
-                  width="500"
-                  height="500"
-                />
-              </div>
-               {/* our main registration code   */}
-              <div className="login-form">
-                <h1 className="form-heading">Login form</h1>
-                <br />
-                <form onSubmit={handleSubmit}>
-                  <div>
-                    <label htmlFor="email">email</label>
-                    <input
-                      type="text"
-                      name="email"
-                      value={user.email}
-                      placeholder="email"
-                      onChange={handleInput}
-                    />
-                  </div>
+      // ❌ server/network error
+      toast.error("Server not responding");
+    }
+  };
 
-                  <div>
-                    <label htmlFor="password">password</label>
-                    <input
-                      type="password"
-                      name="password"
-                      value={user.password}
-                      placeholder="password"
-                      onChange={handleInput}
-                    />
-                  </div>
-                  <br />
-                  <button type="submit" className="submit-btn">
-                    Login
-                  </button>
-                </form>
-              </div>
+  return (
+    <section>
+      <main>
+        <div className="section-login">
+          <div className="container-login">
+            
+            {/* Image */}
+            <div className="login-image">
+              <img
+                src="/images/Login.png"
+                alt="login"
+                width="500"
+                height="500"
+              />
             </div>
-          </div>
-        </main>
-      </section>
 
-    </>
-    );
+            {/* Form */}
+            <div className="login-form">
+              <h1 className="form-heading">Login Form</h1>
+
+              <form onSubmit={handleSubmit}>
+                <div>
+                  <label>Email</label>
+                  <input
+                    type="email"
+                    name="email"
+                    value={user.email}
+                    placeholder="Enter email"
+                    onChange={handleInput}
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label>Password</label>
+                  <input
+                    type="password"
+                    name="password"
+                    value={user.password}
+                    placeholder="Enter password"
+                    onChange={handleInput}
+                    required
+                  />
+                </div>
+
+                <br />
+
+                <button type="submit" className="submit-btn">
+                  Login
+                </button>
+              </form>
+            </div>
+
+          </div>
+        </div>
+      </main>
+    </section>
+  );
 };

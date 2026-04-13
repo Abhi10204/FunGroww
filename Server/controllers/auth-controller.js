@@ -1,77 +1,87 @@
 const User = require("../models/user-model");
 const bcrypt = require("bcryptjs");
-// const async = require("hbs/lib/async");
 
-const home = async(req,res) => {
-    try{
-        res
-            .status(200)
-            .send("Welcome to the FunGrow through router");
-    } catch (error){
-        console.log(error);
-    }
+// Home
+const home = async (req, res) => {
+  try {
+    res.status(200).send("Welcome to FunGrow API");
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ message: "Server error" });
+  }
 };
 
-//User registeration logic
-const register = async(req,res)=>{ 
-    try{
-        console.log(req.body);
-        const{username, email, phone, password} = req.body;
+// ================= REGISTER =================
+const register = async (req, res) => {
+  try {
+    const { username, email, phone, password } = req.body;
 
-        const userExist =await User.findOne({email});
-        if(userExist){
-            return res.status(400).json({msg: "email already exists"});
-        }
-
-        //hash the password methord 1
-        // const saltRound = 10;
-        // const hash_Password = await bcrypt.hash(password, saltRound);
-
-        const userCreated = await User.create({username, email, phone, password});
-
-        res.status(201).json({msg: "registration successful ", token: await userCreated.generateToken(),userId: userCreated._id.toString()});
-    } catch(error){
-        res.status(500).json("internal server error");
+    // check existing user
+    const userExist = await User.findOne({ email });
+    if (userExist) {
+      return res.status(400).json({
+        message: "Email already exists",
+      });
     }
+
+    // create user
+    const userCreated = await User.create({
+      username,
+      email,
+      phone,
+      password,
+    });
+
+    res.status(201).json({
+      message: "Registration successful",
+      token: await userCreated.generateToken(),
+      userId: userCreated._id.toString(),
+    });
+
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({
+      message: "Internal server error",
+    });
+  }
 };
 
+// ================= LOGIN =================
+const login = async (req, res) => {
+  try {
+    const { email, password } = req.body;
 
-//User Login Logic
-const login = async(req,res)=>{
-    try {
-        const {email,password} = req.body;
+    const userExist = await User.findOne({ email });
 
-        const userExist = await User.findOne({email});
-        console.log(userExist);
-
-        if(!userExist){
-            return res.status(400).json({message: "Invalid Credentials"});
-        }
-
-        const user = await bcrypt.compare(password, userExist.password);
-
-        if (user){
-            res.status(201).json({message: "Login sucessful", 
-            token: await userExist.generateToken(),
-            userId: userExist._id.toString()});
-        } else{
-            res.status(401).json({message: "Invalid email or password"});
-        }
-    } catch (error) {
-        console.error(error);  // Logs the error to help you debug
-        res.status(500).json({message: "Internal server error", error: error.message});
+    // ❌ user not found
+    if (!userExist) {
+      return res.status(400).json({
+        message: "User not found",
+      });
     }
-}
 
-//to send user data - user Logic
-// const user = async (req,res) => {
-//     try {
-//         const userData = req.user;
-//         console.log(userData);
-//         return res.status(200).json({msg: userData})
-//     } catch (error) {
-//         console.log("error from the user route", error);
-//     }
-// };
+    // ❌ wrong password
+    const isMatch = await bcrypt.compare(password, userExist.password);
 
-module.exports = {home,register,login};
+    if (!isMatch) {
+      return res.status(401).json({
+        message: "Invalid password",
+      });
+    }
+
+    // ✅ success
+    res.status(200).json({
+      message: "Login successful",
+      token: await userExist.generateToken(),
+      userId: userExist._id.toString(),
+    });
+
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({
+      message: "Internal server error",
+    });
+  }
+};
+
+module.exports = { home, register, login };
